@@ -427,18 +427,21 @@ namespace WindowsFormsApp1
             try
             {
                 float value = float.Parse(textBoxRotationAngle.Text);
-                if (textBoxRotationAngle.Text == "")
-                {
-                    MessageBox.Show(@"Введите угол поворота!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
+                if(!figureOnPictureBox)
                 {
                     MessageBox.Show(@"Вы не вызвали фигуру!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Введён неверный формат числа!(Пример: 1,01)", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (textBoxRotationAngle.Text == "")
+                {
+                    MessageBox.Show(@"Введите угол поворота!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    MessageBox.Show("Введён неверный формат числа!(Пример: 1,01)", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
