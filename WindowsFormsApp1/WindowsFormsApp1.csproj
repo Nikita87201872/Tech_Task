@@ -79,5 +79,11 @@
     <ItemGroup>
         <None Include="App.config"/>
     </ItemGroup>
+    <ItemGroup>
+      <Content Include="Resources\color.png" />
+      <Content Include="Resources\color1.png" />
+      <Content Include="Resources\icons8_rgb_круг_2_60.png" />
+      <Content Include="Resources\icons8_заливка_60.png" />
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
 </Project>

@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
-    public class CoordinateIn3D
+    public class CoordinateIn3D: IEquatable<CoordinateIn3D>
     {
         public float X { get; set; }
         public float Y { get; set; }
@@ -36,6 +36,67 @@ namespace WindowsFormsApp1
             float newY = transformMatrix[1, 0] * X + transformMatrix[1, 1] * Y + transformMatrix[1, 2] * Z;
 
             return new PointF(newX, newY);
+        }
+        
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            CoordinateIn3D other = (CoordinateIn3D)obj;
+            return X == other.X && Y == other.Y && Z == other.Z;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 15;
+                hash = hash * 21 + X.GetHashCode();
+                hash = hash * 21 + Y.GetHashCode();
+                hash = hash * 21 + Z.GetHashCode();
+                return hash;
+            }
+        }
+
+        public bool Equals(CoordinateIn3D other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return X == other.X && Y == other.Y && Z == other.Z;
+        }
+    }
+    
+    public class Face
+    {
+        public List<CoordinateIn3D> Vertices { get; private set; }
+        public Color FaceColor { get; set; }
+
+        public Face(List<CoordinateIn3D> vertices, Color faceColor)
+        {
+            Vertices = vertices;
+            FaceColor = faceColor;
+        }
+
+        public void Draw(Graphics graphics, float distance)
+        {
+            if (Vertices.Count < 3)
+                return;
+
+            PointF[] points = new PointF[Vertices.Count];
+
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                points[i] = Vertices[i].Project(distance);
+            }
+
+            Brush brush = new SolidBrush(FaceColor);
+            graphics.FillPolygon(brush, points);
         }
     }
   public partial class Form1 : Form
@@ -102,9 +163,11 @@ namespace WindowsFormsApp1
         {
             dataGridView1.Rows.Clear();
 
-            for (int i = 0; i < figurePoints.Count; i++)
+            List<CoordinateIn3D> dataList = figurePoints.Distinct().ToList();
+
+            for (int i = 0; i < dataList.Count; i++)
             {
-                dataGridView1.Rows.Add(figurePoints[i].X, figurePoints[i].Y, figurePoints[i].Z, $"Point {i + 1}");
+                dataGridView1.Rows.Add((float)Math.Round(dataList[i].X, 2), (float)Math.Round(dataList[i].Y, 2), (float)Math.Round(dataList[i].Z, 2), $"Point {i + 1}");
             }
         }
 
@@ -166,6 +229,8 @@ namespace WindowsFormsApp1
             };
 
             figurePoints = cubePoints;
+
+            
         }
         
         private void CubeButton_Click(object sender, EventArgs e)
@@ -469,7 +534,24 @@ namespace WindowsFormsApp1
 
         private void UpdateDataGrid_Click(object sender, EventArgs e)
         {
-            UpdateDataGridView();
+            try
+            {
+                UpdateDataGridView();
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show("Вы не вызвали фигуру!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private ColorDialog _colorDialog = new ColorDialog();
+        private Color newColor;
+
+        private void ColorButton_Click(object sender, EventArgs e)
+        {
+            _colorDialog.ShowDialog();
+            newColor = _colorDialog.Color;
+            ChangeColor.BackColor = _colorDialog.Color;
         }
   }
 }
