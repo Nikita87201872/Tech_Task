@@ -40,14 +40,12 @@
             this.label1 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.UpdateDataGrid = new System.Windows.Forms.Button();
-            this.ColorButton = new System.Windows.Forms.Button();
             this.ChangeColor = new System.Windows.Forms.Button();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.comboBox3 = new System.Windows.Forms.ComboBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.ColorButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
@@ -172,9 +170,52 @@
             this.UpdateDataGrid.UseVisualStyleBackColor = true;
             this.UpdateDataGrid.Click += new System.EventHandler(this.UpdateDataGrid_Click);
             // 
+            // ChangeColor
+            // 
+            this.ChangeColor.Enabled = false;
+            this.ChangeColor.Location = new System.Drawing.Point(432, 78);
+            this.ChangeColor.Name = "ChangeColor";
+            this.ChangeColor.Size = new System.Drawing.Size(25, 25);
+            this.ChangeColor.TabIndex = 13;
+            this.ChangeColor.UseVisualStyleBackColor = true;
+            // 
+            // comboBox2
+            // 
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Location = new System.Drawing.Point(498, 12);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(173, 28);
+            this.comboBox2.TabIndex = 16;
+            this.comboBox2.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
+            // 
+            // comboBox3
+            // 
+            this.comboBox3.FormattingEnabled = true;
+            this.comboBox3.Location = new System.Drawing.Point(498, 46);
+            this.comboBox3.Name = "comboBox3";
+            this.comboBox3.Size = new System.Drawing.Size(173, 28);
+            this.comboBox3.TabIndex = 17;
+            this.comboBox3.SelectedIndexChanged += new System.EventHandler(this.comboBox3_SelectedIndexChanged);
+            // 
+            // label3
+            // 
+            this.label3.Location = new System.Drawing.Point(677, 17);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(100, 23);
+            this.label3.TabIndex = 19;
+            this.label3.Text = "Line";
+            // 
+            // label4
+            // 
+            this.label4.Location = new System.Drawing.Point(677, 51);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(100, 23);
+            this.label4.TabIndex = 20;
+            this.label4.Text = "Point";
+            // 
             // ColorButton
             // 
-            this.ColorButton.BackgroundImage = global::WindowsFormsApp1.Properties.Resources.icons8_rgb_круг_2_60;
+            this.ColorButton.BackgroundImage = global::WindowsFormsApp1.Properties.Resources.icons8_rgb_круг_2_601;
             this.ColorButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ColorButton.Cursor = System.Windows.Forms.Cursors.Hand;
             this.ColorButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Gray;
@@ -186,63 +227,6 @@
             this.ColorButton.UseVisualStyleBackColor = true;
             this.ColorButton.Click += new System.EventHandler(this.ColorButton_Click);
             // 
-            // ChangeColor
-            // 
-            this.ChangeColor.Enabled = false;
-            this.ChangeColor.Location = new System.Drawing.Point(432, 78);
-            this.ChangeColor.Name = "ChangeColor";
-            this.ChangeColor.Size = new System.Drawing.Size(25, 25);
-            this.ChangeColor.TabIndex = 13;
-            this.ChangeColor.UseVisualStyleBackColor = true;
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(498, 12);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(173, 28);
-            this.comboBox1.TabIndex = 15;
-            // 
-            // comboBox2
-            // 
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Location = new System.Drawing.Point(498, 80);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(173, 28);
-            this.comboBox2.TabIndex = 16;
-            // 
-            // comboBox3
-            // 
-            this.comboBox3.FormattingEnabled = true;
-            this.comboBox3.Location = new System.Drawing.Point(498, 46);
-            this.comboBox3.Name = "comboBox3";
-            this.comboBox3.Size = new System.Drawing.Size(173, 28);
-            this.comboBox3.TabIndex = 17;
-            // 
-            // label2
-            // 
-            this.label2.Location = new System.Drawing.Point(677, 17);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(100, 23);
-            this.label2.TabIndex = 18;
-            this.label2.Text = "Face";
-            // 
-            // label3
-            // 
-            this.label3.Location = new System.Drawing.Point(677, 51);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(100, 23);
-            this.label3.TabIndex = 19;
-            this.label3.Text = "Line";
-            // 
-            // label4
-            // 
-            this.label4.Location = new System.Drawing.Point(677, 85);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(100, 23);
-            this.label4.TabIndex = 20;
-            this.label4.Text = "Point";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -251,10 +235,8 @@
             this.ClientSize = new System.Drawing.Size(958, 614);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.comboBox3);
             this.Controls.Add(this.comboBox2);
-            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.ChangeColor);
             this.Controls.Add(this.ColorButton);
             this.Controls.Add(this.UpdateDataGrid);
@@ -270,7 +252,7 @@
             this.Controls.Add(this.pictureBox1);
             this.Cursor = System.Windows.Forms.Cursors.Default;
             this.Location = new System.Drawing.Point(15, 15);
-            this.MinimumSize = new System.Drawing.Size(650, 430);
+            this.MinimumSize = new System.Drawing.Size(965, 495);
             this.Name = "Form1";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.Resize += new System.EventHandler(this.Form1_Resize);
@@ -280,14 +262,15 @@
             this.PerformLayout();
         }
 
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Button ColorButton;
+
+        private System.Windows.Forms.Button button1;
+
         private System.Windows.Forms.ComboBox comboBox2;
         private System.Windows.Forms.ComboBox comboBox3;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
 
-        private System.Windows.Forms.Button ColorButton;
         private System.Windows.Forms.Button ChangeColor;
 
         private System.Windows.Forms.Button UpdateDataGrid;

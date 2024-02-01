@@ -46,12 +46,21 @@
         <Reference Include="System.Xml"/>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Classes\ChangeFigure.cs" />
+        <Compile Include="Classes\Coordinate.cs" />
+        <Compile Include="Classes\Cube.cs" />
+        <Compile Include="Classes\Lines.cs" />
+        <Compile Include="Classes\Parallelepiped.cs" />
+        <Compile Include="Classes\Points.cs" />
+        <Compile Include="Classes\Pyramid.cs" />
         <Compile Include="Form1.cs">
             <SubType>Form</SubType>
         </Compile>
         <Compile Include="Form1.Designer.cs">
             <DependentUpon>Form1.cs</DependentUpon>
         </Compile>
+        <Compile Include="Interfaces\IDraw.cs" />
+        <Compile Include="Interfaces\IChangeFigure.cs" />
         <Compile Include="Program.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <EmbeddedResource Include="Form1.resx">
@@ -80,10 +89,7 @@
         <None Include="App.config"/>
     </ItemGroup>
     <ItemGroup>
-      <Content Include="Resources\color.png" />
-      <Content Include="Resources\color1.png" />
-      <Content Include="Resources\icons8_rgb_круг_2_60.png" />
-      <Content Include="Resources\icons8_заливка_60.png" />
+      <Content Include="Resources\icons8_rgb_круг_2_601.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
 </Project>

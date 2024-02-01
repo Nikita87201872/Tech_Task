@@ -9,96 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsFormsApp1.Classes;
+using WindowsFormsApp1.Interfaces;
 
 namespace WindowsFormsApp1
 {
-    public class CoordinateIn3D: IEquatable<CoordinateIn3D>
-    {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
-
-        public CoordinateIn3D(float x, float y, float z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
-        public PointF Project(float distance)
-        {
-            float[,] transformMatrix = {
-                { 1, 0, 0 },
-                { 0, 1, 0 },
-                { 0, 0, distance / (distance - Z) }
-            };
-
-            float newX = transformMatrix[0, 0] * X + transformMatrix[0, 1] * Y + transformMatrix[0, 2] * Z;
-            float newY = transformMatrix[1, 0] * X + transformMatrix[1, 1] * Y + transformMatrix[1, 2] * Z;
-
-            return new PointF(newX, newY);
-        }
-        
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            CoordinateIn3D other = (CoordinateIn3D)obj;
-            return X == other.X && Y == other.Y && Z == other.Z;
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hash = 15;
-                hash = hash * 21 + X.GetHashCode();
-                hash = hash * 21 + Y.GetHashCode();
-                hash = hash * 21 + Z.GetHashCode();
-                return hash;
-            }
-        }
-
-        public bool Equals(CoordinateIn3D other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-
-            return X == other.X && Y == other.Y && Z == other.Z;
-        }
-    }
-    
-    public class Face
-    {
-        public List<CoordinateIn3D> Vertices { get; private set; }
-        public Color FaceColor { get; set; }
-
-        public Face(List<CoordinateIn3D> vertices, Color faceColor)
-        {
-            Vertices = vertices;
-            FaceColor = faceColor;
-        }
-
-        public void Draw(Graphics graphics, float distance)
-        {
-            if (Vertices.Count < 3)
-                return;
-
-            PointF[] points = new PointF[Vertices.Count];
-
-            for (int i = 0; i < Vertices.Count; i++)
-            {
-                points[i] = Vertices[i].Project(distance);
-            }
-
-            Brush brush = new SolidBrush(FaceColor);
-            graphics.FillPolygon(brush, points);
-        }
-    }
   public partial class Form1 : Form
   {
         public Form1()
@@ -119,11 +34,36 @@ namespace WindowsFormsApp1
             AddKeyHandlers();
             
             pictureBox1.BackColor = Color.White;
+
+            ChangeFigure = new ChangeFigure(pictureBox1);
         }
+        
+        public List<Points> FigurePoints = new List<Points>();
+        public List<Lines> FigureLines = new List<Lines>();
+        public Cube Cube;
+        public Pyramid Pyramid;
+        public Parallelepiped Parallelepiped;
+        private bool _figureOnPictureBox = false;
+        public ChangeFigure ChangeFigure;
+        private bool isMouseDown = false;
+        private Point lastMousePos;
+        public float distance = 300;
+        
         
         private void Form1_Resize(object sender, EventArgs e)
         {
-            RedrawFigure();
+            try
+            {
+                if (pictureBox1.Width > 0 && pictureBox1.Height > 0)
+                {
+                    pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                    ChangeFigure.Redraw(FigurePoints, FigureLines, distance);
+                }
+            }
+            catch (Exception ex)
+            {
+                HandlingError(ex);
+            }
         }
         
         private void AddKeyHandlers()
@@ -159,267 +99,98 @@ namespace WindowsFormsApp1
             dataGridView1.MultiSelect = false;
         }
 
-        private void UpdateDataGridView()
+        public void UpdateComboBoxes()
         {
-            dataGridView1.Rows.Clear();
-
-            List<CoordinateIn3D> dataList = figurePoints.Distinct().ToList();
-
-            for (int i = 0; i < dataList.Count; i++)
+            comboBox2.Items.Clear();
+            comboBox3.Items.Clear();
+            
+            for (int i = 0; i < FigureLines.Count; i++)
             {
-                dataGridView1.Rows.Add((float)Math.Round(dataList[i].X, 2), (float)Math.Round(dataList[i].Y, 2), (float)Math.Round(dataList[i].Z, 2), $"Point {i + 1}");
+                comboBox2.Items.Add($"Line {i + 1}");
             }
-        }
 
-        private List<CoordinateIn3D> figurePoints;
-        
-        private bool figureOnPictureBox = false;
-
-        public void FigureDraw()
-        {
-            float distance = 300;
-            
-            Pen p = new Pen(Color.Black);
-            
-            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
-            
-            graphics.TranslateTransform(pictureBox1.Width / 2, pictureBox1.Height / 2);
-
-            GraphicsPath graphicsPath = new GraphicsPath();
-
-            PointF[] points = new PointF[figurePoints.Count];
-            
-            for (int i = 0; i < figurePoints.Count; i++)
+            for (int i = 0; i < FigurePoints.Count; i++)
             {
-                points[i] = figurePoints[i].Project(distance);
+                comboBox3.Items.Add($"Point {i + 1}");
             }
-            
-            graphicsPath.AddPolygon(points);
-            
-            graphics.DrawPolygon(p, points);
-
-            pictureBox1.Invalidate();
-        }
-        
-        public void CubeDraw()
-        {
-            int x = pictureBox1.Height / 5;
-            int y = pictureBox1.Height / 5;
-            int z = pictureBox1.Height / 5;
-            List<CoordinateIn3D> cubePoints = new List<CoordinateIn3D>()
-            {
-                new CoordinateIn3D(-x, -y, -z),
-                new CoordinateIn3D(x, -y, -z),
-                new CoordinateIn3D(x, y, -z),
-                new CoordinateIn3D(-x, y, -z),
-                new CoordinateIn3D(-x, -y, -z),
-                
-                new CoordinateIn3D(-x, -y, z),
-                new CoordinateIn3D(x, -y, z),
-                new CoordinateIn3D(x, y, z),
-                new CoordinateIn3D(-x, y, z),
-                new CoordinateIn3D(-x, -y, z),
-                new CoordinateIn3D(-x, y, z),
-                new CoordinateIn3D(-x, y, -z),
-                
-                new CoordinateIn3D(x, y, -z),
-                new CoordinateIn3D(x, y, z),
-                new CoordinateIn3D(x, -y, z),
-                new CoordinateIn3D(x, -y, -z),
-            };
-
-            figurePoints = cubePoints;
-
-            
         }
         
         private void CubeButton_Click(object sender, EventArgs e)
         {
+            _figureOnPictureBox = true;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            CubeDraw();
-            FigureDraw();
-            figureOnPictureBox = true;
+            Cube = new Cube(pictureBox1);
+            Cube.Draw();
+            FigurePoints = Cube.CubePoints;
+            FigureLines = Cube.CubeLines;
+            
             UpdateDataGridView();
+            UpdateComboBoxes();
         }
 
-        public void PyramidDraw()
-        {
-            int x = pictureBox1.Height / 5;
-            int y = pictureBox1.Height / 5;
-            int z = pictureBox1.Height / 5;
-            List<CoordinateIn3D> pyramidPoints = new List<CoordinateIn3D>()
-            {
-                new CoordinateIn3D(-x, y, -z),
-                new CoordinateIn3D(x, y, -z),
-                new CoordinateIn3D(x, y, z),
-                new CoordinateIn3D(-x, y, z),
-                new CoordinateIn3D(0, -2 * y, 0),
-                new CoordinateIn3D(x, y, -z),
-                new CoordinateIn3D(x, y, z),
-                new CoordinateIn3D(0, -2 * y, 0),
-                new CoordinateIn3D(-x, y, -z),
-                new CoordinateIn3D(-x, y, z)
-            };
-
-            figurePoints = pyramidPoints;
-        }
         
         private void PyramidButton_Click(object sender, EventArgs e)
         {
+            _figureOnPictureBox = true;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            PyramidDraw();
-            FigureDraw();
-            figureOnPictureBox = true;
+            Pyramid = new Pyramid(pictureBox1);
+            Pyramid.Draw();
+            FigurePoints = Pyramid.PyramidPoints;
+            FigureLines = Pyramid.PyramidLines;
+            
             UpdateDataGridView();
+            UpdateComboBoxes();
         }
         
-        public void ParallelepipedDraw()
-        {
-            int x = pictureBox1.Height / 5;
-            int y = pictureBox1.Height / 7 * 2;
-            int z = pictureBox1.Height / 5;
-            List<CoordinateIn3D> parallelepipedPoints = new List<CoordinateIn3D>()
-            {
-                new CoordinateIn3D(-x, -y, -z),
-                new CoordinateIn3D(x, -y, -z),
-                new CoordinateIn3D(x, y, -z),
-                new CoordinateIn3D(-x, y, -z),
-                new CoordinateIn3D(-x, -y, -z),
-                
-                new CoordinateIn3D(-x, -y, z),
-                new CoordinateIn3D(x, -y, z),
-                new CoordinateIn3D(x, y, z),
-                new CoordinateIn3D(-x, y, z),
-                new CoordinateIn3D(-x, -y, z),
-                new CoordinateIn3D(-x, y, z),
-                new CoordinateIn3D(-x, y, -z),
-                
-                new CoordinateIn3D(x, y, -z),
-                new CoordinateIn3D(x, y, z),
-                new CoordinateIn3D(x, -y, z),
-                new CoordinateIn3D(x, -y, -z),
-            };
-
-            figurePoints = parallelepipedPoints;
-        }
 
         private void ParallelepipedButton_Click(object sender, EventArgs e)
         {
+            _figureOnPictureBox = true;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            ParallelepipedDraw();
-            FigureDraw();
-            figureOnPictureBox = true;
+            Parallelepiped = new Parallelepiped(pictureBox1);
+            Parallelepiped.Draw();
+            FigurePoints = Parallelepiped.ParallelepipedPoints;
+            FigureLines = Parallelepiped.ParallelepipedLines;
+            
             UpdateDataGridView();
-        }
-
-        private void RedrawFigure()
-        {
-            if (figureOnPictureBox)
-            {
-                pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-
-                FigureDraw();
-            }
+            UpdateComboBoxes();
         }
 
         public void X_Rotate(float angle)
         {
-            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
-            graphics.TranslateTransform(pictureBox1.Width / 2, pictureBox1.Height / 2);
-
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                float x = figurePoints[i].X;
-                float y = figurePoints[i].Y;
-                float z = figurePoints[i].Z;
-
-                float newY = y * (float)Math.Cos(angle) - z * (float)Math.Sin(angle);
-                float newZ = z * (float)Math.Cos(angle) + y * (float)Math.Sin(angle);
-
-                figurePoints[i] = new CoordinateIn3D(x, newY, newZ);
-            }
-            RedrawFigure();
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            ChangeFigure.TransformX(FigurePoints, FigureLines, angle);
         }
-
+        
         private void X_Coordinate_Click(object sender, EventArgs e)
         {
-            try
-            {
-                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-                X_Rotate(angle);
-            }
-            catch (Exception exception)
-            {
-                HandlingError(exception);
-            }
+            float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
+            X_Rotate(angle);
         }
 
         public void Y_Rotate(float angle)
         {
-            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
-            graphics.TranslateTransform(pictureBox1.Width / 2, pictureBox1.Height / 2);
-
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                float x = figurePoints[i].X;
-                float y = figurePoints[i].Y;
-                float z = figurePoints[i].Z;
-
-                float newX = x * (float)Math.Cos(angle) + z * (float)Math.Sin(angle);
-                float newZ = z * (float)Math.Cos(angle) - x * (float)Math.Sin(angle);
-
-                figurePoints[i] = new CoordinateIn3D(newX, y, newZ);
-            }
-            RedrawFigure();
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            ChangeFigure.TransformY(FigurePoints, FigureLines, angle);
         }
-        
+
         private void Y_Coordinate_Click(object sender, EventArgs e)
         {
-            try
-            {
-                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-                Y_Rotate(angle);
-            }
-            catch (Exception exception)
-            {
-                HandlingError(exception);
-            }
+            float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
+            Y_Rotate(angle);
         }
 
         public void Z_Rotate(float angle)
         {
-            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
-            graphics.TranslateTransform(pictureBox1.Width / 2, pictureBox1.Height / 2);
-
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                float x = figurePoints[i].X;
-                float y = figurePoints[i].Y;
-                float z = figurePoints[i].Z;
-
-                float newX = x * (float)Math.Cos(angle) - y * (float)Math.Sin(angle);
-                float newY = y * (float)Math.Cos(angle) + x * (float)Math.Sin(angle);
-
-                figurePoints[i] = new CoordinateIn3D(newX, newY, z);
-            }
-            RedrawFigure();
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            ChangeFigure.TransformZ(FigurePoints, FigureLines, angle);
         }
-        
+
         private void Z_Coordinate_Click(object sender, EventArgs e)
         {
-            try
-            {
-                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-                Z_Rotate(angle);
-            }
-            catch (Exception exception)
-            {
-                HandlingError(exception);
-            }
+            float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
+            Z_Rotate(angle);
         }
-
-        private bool isMouseDown = false;
-        private Point lastMousePos;
 
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
@@ -443,9 +214,10 @@ namespace WindowsFormsApp1
 
                     float angleX = deltaX * 0.01f;
                     float angleY = deltaY * 0.01f;
-
-                    X_Rotate(-angleY);
-                    Y_Rotate(angleX);
+                    pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                    ChangeFigure.TransformX(FigurePoints, FigureLines, -angleY);
+                    pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                    ChangeFigure.TransformY(FigurePoints, FigureLines, angleX);
 
                     lastMousePos = e.Location;
                 }
@@ -492,7 +264,7 @@ namespace WindowsFormsApp1
             try
             {
                 float value = float.Parse(textBoxRotationAngle.Text);
-                if(!figureOnPictureBox)
+                if(!_figureOnPictureBox)
                 {
                     MessageBox.Show(@"Вы не вызвали фигуру!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -509,26 +281,25 @@ namespace WindowsFormsApp1
                 }
             }
         }
-
-        private void FigureScaling(float changeSize)
-        {
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                figurePoints[i].X *= changeSize;
-                figurePoints[i].Y *= changeSize;
-                figurePoints[i].Z *= changeSize;
-            }
-
-            RedrawFigure();
-        }
         
         private void Form1_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (pictureBox1.Bounds.Contains(e.Location) && figureOnPictureBox)
+            if (pictureBox1.Bounds.Contains(e.Location))
             {
                 int delta = e.Delta;
                 float changeSize = (delta > 0) ? 1.01f : 0.99f;
-                FigureScaling(changeSize);
+                pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                ChangeFigure.Zoom(FigurePoints, FigureLines, changeSize);
+            }
+        }
+        
+        private void UpdateDataGridView()
+        {
+            dataGridView1.Rows.Clear();
+
+            for (int i = 0; i < FigurePoints.Count; i++)
+            {
+                dataGridView1.Rows.Add(Math.Round(FigurePoints[i].Coordinate.X, 1), Math.Round(FigurePoints[i].Coordinate.Y, 1), Math.Round(FigurePoints[i].Coordinate.Z, 1), $"Point {i + 1}");
             }
         }
 
@@ -545,13 +316,59 @@ namespace WindowsFormsApp1
         }
 
         private ColorDialog _colorDialog = new ColorDialog();
-        private Color newColor;
+        private Color _newColor;
+        enum LastSelectedType
+        {
+            None,
+            Point,
+            Line
+        }
 
+        private LastSelectedType _lastSelectedType = LastSelectedType.None;
         private void ColorButton_Click(object sender, EventArgs e)
         {
             _colorDialog.ShowDialog();
-            newColor = _colorDialog.Color;
             ChangeColor.BackColor = _colorDialog.Color;
+            if (_lastSelectedType == LastSelectedType.Point)
+            {
+                ApplyColorForPoint(_colorDialog.Color);
+            }
+            else if (_lastSelectedType == LastSelectedType.Line)
+            {
+                ApplyColorForLine(_colorDialog.Color);
+            }
+
+            ChangeFigure.Redraw(FigurePoints, FigureLines, distance);
+        }
+
+        private void ApplyColorForPoint(Color color)
+        {
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            int count = comboBox3.SelectedIndex;
+            FigurePoints[count].PointColor = color;
+            FigurePoints[count].PointBrush = new SolidBrush(color);
+        }
+
+        private void ApplyColorForLine(Color color)
+        {
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            int count = comboBox2.SelectedIndex;
+            FigureLines[count].LineColor = color;
+            FigureLines[count].LinePen = new Pen(color);
+        }
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _lastSelectedType = LastSelectedType.Line;
+            Color color = FigureLines[comboBox2.SelectedIndex].LinePen.Color;
+            ChangeColor.BackColor = color;
+        }
+
+        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _lastSelectedType = LastSelectedType.Point;
+            Color color = ((SolidBrush)FigurePoints[comboBox3.SelectedIndex].PointBrush).Color;
+            ChangeColor.BackColor = color;
         }
   }
 }

@@ -8,4 +8,4 @@ D:\Техническое Задание\WindowsFormsApp1\WindowsFormsApp1\obj\D
 D:\Техническое Задание\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.CoreCompileInputs.cache
 D:\Техническое Задание\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.exe
 D:\Техническое Задание\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.pdb
-D:\Техническое Задание\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.CoordinateIn3D.resources
+D:\Техническое Задание\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.Form1.resources
