@@ -38,8 +38,8 @@ namespace WindowsFormsApp1
             ChangeFigure = new ChangeFigure(pictureBox1);
         }
         
-        public List<Points> FigurePoints = new List<Points>();
-        public List<Lines> FigureLines = new List<Lines>();
+        public List<Points> FigurePoints;
+        public List<Lines> FigureLines;
         public Cube Cube;
         public Pyramid Pyramid;
         public Parallelepiped Parallelepiped;
@@ -164,8 +164,15 @@ namespace WindowsFormsApp1
         
         private void X_Coordinate_Click(object sender, EventArgs e)
         {
-            float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-            X_Rotate(angle);
+            try
+            {
+                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
+                X_Rotate(angle);
+            }
+            catch (Exception exception)
+            {
+                HandlingError(exception);
+            }
         }
 
         public void Y_Rotate(float angle)
@@ -176,8 +183,15 @@ namespace WindowsFormsApp1
 
         private void Y_Coordinate_Click(object sender, EventArgs e)
         {
-            float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-            Y_Rotate(angle);
+            try
+            {
+                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
+                Y_Rotate(angle);
+            }
+            catch (Exception exception)
+            {
+                HandlingError(exception);
+            }
         }
 
         public void Z_Rotate(float angle)
@@ -188,8 +202,15 @@ namespace WindowsFormsApp1
 
         private void Z_Coordinate_Click(object sender, EventArgs e)
         {
-            float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-            Z_Rotate(angle);
+            try
+            {
+                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
+                Z_Rotate(angle);
+            }
+            catch (Exception exception)
+            {
+                HandlingError(exception);
+            }
         }
 
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
@@ -281,10 +302,9 @@ namespace WindowsFormsApp1
                 }
             }
         }
-        
         private void Form1_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (pictureBox1.Bounds.Contains(e.Location))
+            if (pictureBox1.Bounds.Contains(e.Location) && _figureOnPictureBox)
             {
                 int delta = e.Delta;
                 float changeSize = (delta > 0) ? 1.01f : 0.99f;
@@ -327,18 +347,25 @@ namespace WindowsFormsApp1
         private LastSelectedType _lastSelectedType = LastSelectedType.None;
         private void ColorButton_Click(object sender, EventArgs e)
         {
-            _colorDialog.ShowDialog();
-            ChangeColor.BackColor = _colorDialog.Color;
-            if (_lastSelectedType == LastSelectedType.Point)
+            if (!_figureOnPictureBox)
             {
-                ApplyColorForPoint(_colorDialog.Color);
+                MessageBox.Show("Вы не вызвали фигуру!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (_lastSelectedType == LastSelectedType.Line)
+            else
             {
-                ApplyColorForLine(_colorDialog.Color);
-            }
+                _colorDialog.ShowDialog();
+                ChangeColor.BackColor = _colorDialog.Color;
+                if (_lastSelectedType == LastSelectedType.Point)
+                {
+                    ApplyColorForPoint(_colorDialog.Color);
+                }
+                else if (_lastSelectedType == LastSelectedType.Line)
+                {
+                    ApplyColorForLine(_colorDialog.Color);
+                }
 
-            ChangeFigure.Redraw(FigurePoints, FigureLines, distance);
+                ChangeFigure.Redraw(FigurePoints, FigureLines, distance);
+            }
         }
 
         private void ApplyColorForPoint(Color color)
