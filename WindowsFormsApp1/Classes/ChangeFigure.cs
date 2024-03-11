@@ -24,7 +24,7 @@ namespace WindowsFormsApp1.Classes
             List<Points> newPoints = new List<Points>();
             List<Lines> newLines = new List<Lines>();
 
-            foreach (var point in figurePoints)
+            foreach (Points point in figurePoints)
             {
                 float x = point.Coordinate.X;
                 float y = point.Coordinate.Y;
@@ -56,14 +56,14 @@ namespace WindowsFormsApp1.Classes
                 newPoints.Add(newPoint);
             }
 
-            foreach (var line in figureLines)
+            foreach (Lines line in figureLines)
             {
                 List<Coordinate> newCoordinates = new List<Coordinate>();
-                foreach (var vertex in line.Vertices)
+                foreach (Coordinate coordinate in line.Vertices)
                 {
-                    float x = vertex.X;
-                    float y = vertex.Y;
-                    float z = vertex.Z;
+                    float x = coordinate.X;
+                    float y = coordinate.Y;
+                    float z = coordinate.Z;
 
                     float newX = x, newY = y, newZ = z;
 
@@ -170,12 +170,12 @@ namespace WindowsFormsApp1.Classes
             _savedPointColors.Clear();
             _savedLineColors.Clear();
 
-            foreach (var point in figurePoints)
+            foreach (Points point in figurePoints)
             {
                 _savedPointColors.Add(point.PointColor);
             }
 
-            foreach (var line in figureLines)
+            foreach (Lines line in figureLines)
             {
                 _savedLineColors.Add(line.LineColor);
             }

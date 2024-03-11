@@ -10,20 +10,6 @@ namespace WindowsFormsApp1.Classes
         public List<Points> Points;
         public PictureBox PictureBox;
         
-        // public Coordinate Coordinate { get; set; }
-        // public Brush PointBrush { get; set; }
-        // public Color PointColor { get; set; } = Color.Black;
-        //
-        //
-        //
-        // public List<Coordinate> Vertices { get; private set; }
-        // public Pen LinePen { get; set; }
-        // public Color LineColor { get; set; } = Color.Black;
-        
-        
-        
-        // private readonly List<Color> _savedPointColors = new List<Color>();
-        // private readonly List<Color> _savedLineColors = new List<Color>();
         protected AbstractDrawer(PictureBox pictureBox)
         {
             PictureBox = pictureBox;
