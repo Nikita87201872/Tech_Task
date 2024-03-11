@@ -5,33 +5,26 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1.Classes
 {
-    public class Pyramid : IDraw
+    public class Pyramid : AbstractDrawer
     {
-        public List<Lines> PyramidLines = new List<Lines>();
-        public List<Points> PyramidPoints = new List<Points>();
-        private PictureBox PictureBox;
-
-        public Pyramid(PictureBox pictureBox)
+        public Pyramid(PictureBox pictureBox) : base(pictureBox)
         {
-            PictureBox = pictureBox;
-            PyramidLines = new List<Lines>();
-            PyramidPoints = new List<Points>();
             
-            InitializePyramidData();
+            PictureBox = pictureBox;
+            Lines = new List<Lines>();
+            Points = new List<Points>();
+            InitializeData();
+            
         }
 
-        private void InitializePyramidData()
+        protected sealed override void InitializeData()
         {
-            float distance = 300;
-
-            Pen pen = new Pen(Color.Black);
-            
-            int x = PictureBox.Height / 5;
-            int y = PictureBox.Height / 5;
-            int z = PictureBox.Height / 5;
+            float x = (float)PictureBox.Height / 5;
+            float y = (float)PictureBox.Height / 5;
+            float z = (float)PictureBox.Height / 5;
             
 
-            List<Coordinate> PyramidPoint = new List<Coordinate>()
+            List<Coordinate> pyramidPoint = new List<Coordinate>()
             {
                 new Coordinate(-x, y, z),
                 new Coordinate(-x, y, -z),
@@ -40,7 +33,7 @@ namespace WindowsFormsApp1.Classes
                 new Coordinate(0, -2 * y, 0)
             };
 
-            List<List<int>> PyramidLineIndices = new List<List<int>>()
+            List<List<int>> pyramidLineIndices = new List<List<int>>()
             {
                 new List<int>() {0, 1},
                 new List<int>() {1, 2},
@@ -53,36 +46,18 @@ namespace WindowsFormsApp1.Classes
                 new List<int>() {3, 4}
             };
 
-            for (int i = 0; i < PyramidLineIndices.Count; i++)
+            for (int i = 0; i < pyramidLineIndices.Count; i++)
             {
-                List<Coordinate> lineVertices = PyramidLineIndices[i].Select(index => PyramidPoint[index]).ToList();
-                Lines pyramidLines = new Lines(lineVertices, Pens.Black);
-                PyramidLines.Add(pyramidLines);
+                List<Coordinate> lineVertices = pyramidLineIndices[i].Select(index => pyramidPoint[index]).ToList();
+                Lines cubeLine = new Lines(lineVertices, Pens.Black);
+                Lines.Add(cubeLine);
             }
 
-            for (int i = 0; i < PyramidPoint.Count; i++)
+            for (int i = 0; i < pyramidPoint.Count; i++)
             {
-                Points points = new Points(PyramidPoint[i], Brushes.Black);
-                PyramidPoints.Add(points);
+                Points cubePoint = new Points(pyramidPoint[i], Brushes.Black);
+                Points.Add(cubePoint);
             }
         }
-        
-        public void Draw()
-        {
-            Graphics graphics = PictureBox.CreateGraphics();
-            float distance = 300;
-
-            foreach (Lines pyramidLine in PyramidLines)
-            {
-                pyramidLine.Draw(PictureBox, distance);
-            }
-
-            foreach (Points pyramidPoint in PyramidPoints)
-            {
-                pyramidPoint.Draw(PictureBox, distance);
-            }
-
-            graphics.Dispose();
-        }        
     }
 }

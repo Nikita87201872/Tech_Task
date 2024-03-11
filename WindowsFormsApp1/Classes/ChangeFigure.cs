@@ -2,232 +2,116 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using WindowsFormsApp1.Interfaces;
 
 namespace WindowsFormsApp1.Classes
 {
-    public class ChangeFigure : IChangeFigure
+    public class ChangeFigure : AbstractDrawer
     {
-        private PictureBox PictureBox;
-        public List<Points> NewPoints = new List<Points>();
-        public List<Lines> NewLines = new List<Lines>();
-        private List<Color> savedPointColors = new List<Color>();
-        private List<Color> savedLineColors = new List<Color>();
+        private readonly PictureBox _pictureBox;
+        private readonly List<Points> _newPoints = new List<Points>();
+        private readonly List<Lines> _newLines = new List<Lines>();
+        private readonly List<Color> _savedPointColors = new List<Color>();
+        private readonly List<Color> _savedLineColors = new List<Color>();
 
-        public ChangeFigure(PictureBox pictureBox)
+        public ChangeFigure(PictureBox pictureBox) : base(pictureBox)
         {
-            PictureBox = pictureBox;
+            _pictureBox = pictureBox;
         }
-        
-        public void TransformX(List<Points> figurePoints, List<Lines> figureLines, float angle)
+        public void Rotate(List<Points> figurePoints, List<Lines> figureLines, float angle, char axis)
         {
-            float distance = 300;
-            Graphics graphics = Graphics.FromImage(PictureBox.Image);
-            graphics.TranslateTransform(PictureBox.Width / 2, PictureBox.Height / 2);
-            
             SaveColors(figurePoints, figureLines);
-            
-            NewPoints.Clear();
-            NewLines.Clear();
-            
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                float x = figurePoints[i].Coordinate.X;
-                float y = figurePoints[i].Coordinate.Y;
-                float z = figurePoints[i].Coordinate.Z;
 
-                float newY = y * (float)Math.Cos(angle) - z * (float)Math.Sin(angle);
-                float newZ = z * (float)Math.Cos(angle) + y * (float)Math.Sin(angle);
-                
-                Coordinate newCoordinate = new Coordinate(x, newY, newZ);
-                Points newPoints = new Points(newCoordinate, figurePoints[i].PointBrush)
+            List<Points> newPoints = new List<Points>();
+            List<Lines> newLines = new List<Lines>();
+
+            foreach (var point in figurePoints)
+            {
+                float x = point.Coordinate.X;
+                float y = point.Coordinate.Y;
+                float z = point.Coordinate.Z;
+
+                float newX = x, newY = y, newZ = z;
+
+                switch (axis)
                 {
-                    PointColor = savedPointColors[i]
+                    case 'X':
+                        newY = y * (float)Math.Cos(angle) - z * (float)Math.Sin(angle);
+                        newZ = z * (float)Math.Cos(angle) + y * (float)Math.Sin(angle);
+                        break;
+                    case 'Y':
+                        newX = x * (float)Math.Cos(angle) + z * (float)Math.Sin(angle);
+                        newZ = z * (float)Math.Cos(angle) - x * (float)Math.Sin(angle);
+                        break;
+                    case 'Z':
+                        newX = x * (float)Math.Cos(angle) - y * (float)Math.Sin(angle);
+                        newY = y * (float)Math.Cos(angle) + x * (float)Math.Sin(angle);
+                        break;
+                }
+
+                Coordinate newCoordinate = new Coordinate(newX, newY, newZ);
+                Points newPoint = new Points(newCoordinate, point.PointBrush)
+                {
+                    PointColor = point.PointColor
                 };
-                NewPoints.Add(newPoints);
+                newPoints.Add(newPoint);
             }
 
-            for (int i = 0; i < figureLines.Count; i++)
+            foreach (var line in figureLines)
             {
                 List<Coordinate> newCoordinates = new List<Coordinate>();
-                for (int j = 0; j < 2; j++)
+                foreach (var vertex in line.Vertices)
                 {
-                    float x = figureLines[i].Vertices[j].X;
-                    float y = figureLines[i].Vertices[j].Y;
-                    float z = figureLines[i].Vertices[j].Z;
-                    
-                    float newY = y * (float)Math.Cos(angle) - z * (float)Math.Sin(angle);
-                    float newZ = z * (float)Math.Cos(angle) + y * (float)Math.Sin(angle);
+                    float x = vertex.X;
+                    float y = vertex.Y;
+                    float z = vertex.Z;
 
-                    Coordinate newCoordinate = new Coordinate(x, newY, newZ);
+                    float newX = x, newY = y, newZ = z;
+
+                    switch (axis)
+                    {
+                        case 'X':
+                            newY = y * (float)Math.Cos(angle) - z * (float)Math.Sin(angle);
+                            newZ = z * (float)Math.Cos(angle) + y * (float)Math.Sin(angle);
+                            break;
+                        case 'Y':
+                            newX = x * (float)Math.Cos(angle) + z * (float)Math.Sin(angle);
+                            newZ = z * (float)Math.Cos(angle) - x * (float)Math.Sin(angle);
+                            break;
+                        case 'Z':
+                            newX = x * (float)Math.Cos(angle) - y * (float)Math.Sin(angle);
+                            newY = y * (float)Math.Cos(angle) + x * (float)Math.Sin(angle);
+                            break;
+                    }
+
+                    Coordinate newCoordinate = new Coordinate(newX, newY, newZ);
                     newCoordinates.Add(newCoordinate);
                 }
 
-                Lines newLines = new Lines(newCoordinates, figureLines[i].LinePen)
+                Lines newLine = new Lines(newCoordinates, line.LinePen)
                 {
-                    LineColor = savedLineColors[i]
+                    LineColor = line.LineColor
                 };
-                NewLines.Add(newLines);
+                newLines.Add(newLine);
             }
-            
+
             figurePoints.Clear();
-            figurePoints.AddRange(NewPoints);
+            figurePoints.AddRange(newPoints);
 
             figureLines.Clear();
-            figureLines.AddRange(NewLines);
-            
-            RestoreColors(figurePoints, figureLines);
-            
-            Redraw(figurePoints, figureLines, distance);
-        }
+            figureLines.AddRange(newLines);
 
-        public void TransformY(List<Points> figurePoints, List<Lines> figureLines, float angle)
-        {
-            float distance = 300;
-            Graphics graphics = Graphics.FromImage(PictureBox.Image);
-            graphics.TranslateTransform(PictureBox.Width / 2, PictureBox.Height / 2);
-            
-            SaveColors(figurePoints, figureLines);
-            
-            NewPoints.Clear();
-            NewLines.Clear();
-            
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                float x = figurePoints[i].Coordinate.X;
-                float y = figurePoints[i].Coordinate.Y;
-                float z = figurePoints[i].Coordinate.Z;
-
-                float newX = x * (float)Math.Cos(angle) + z * (float)Math.Sin(angle);
-                float newZ = z * (float)Math.Cos(angle) - x * (float)Math.Sin(angle);
-                
-                Coordinate newCoordinate = new Coordinate(newX, y, newZ);
-                Points newPoints = new Points(newCoordinate, figurePoints[i].PointBrush)
-                {
-                    PointColor = savedPointColors[i]
-                };
-                NewPoints.Add(newPoints);
-            }
-
-            for (int i = 0; i < figureLines.Count; i++)
-            {
-                List<Coordinate> newCoordinates = new List<Coordinate>();
-                for (int j = 0; j < 2; j++)
-                {
-                    float x = figureLines[i].Vertices[j].X;
-                    float y = figureLines[i].Vertices[j].Y;
-                    float z = figureLines[i].Vertices[j].Z;
-                    
-                    float newX = x * (float)Math.Cos(angle) + z * (float)Math.Sin(angle);
-                    float newZ = z * (float)Math.Cos(angle) - x * (float)Math.Sin(angle);
-
-                    Coordinate newCoordinate = new Coordinate(newX, y, newZ);
-                    newCoordinates.Add(newCoordinate);
-                }
-
-                Lines newLines = new Lines(newCoordinates, figureLines[i].LinePen)
-                {
-                    LineColor = savedLineColors[i]
-                };
-                NewLines.Add(newLines);
-            }
-            
-            figurePoints.Clear();
-            figurePoints.AddRange(NewPoints);
-
-            figureLines.Clear();
-            figureLines.AddRange(NewLines);
-            
-            RestoreColors(figurePoints, figureLines);
-            
-            Redraw(figurePoints, figureLines, distance);
-        }
-
-        public void TransformZ(List<Points> figurePoints, List<Lines> figureLines, float angle)
-        {
-            float distance = 300;
-            Graphics graphics = Graphics.FromImage(PictureBox.Image);
-            graphics.TranslateTransform(PictureBox.Width / 2, PictureBox.Height / 2);
-            
-            SaveColors(figurePoints, figureLines);
-            
-            NewPoints.Clear();
-            NewLines.Clear();
-            
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                float x = figurePoints[i].Coordinate.X;
-                float y = figurePoints[i].Coordinate.Y;
-                float z = figurePoints[i].Coordinate.Z;
-
-                float newX = x * (float)Math.Cos(angle) - y * (float)Math.Sin(angle);
-                float newY = y * (float)Math.Cos(angle) + x * (float)Math.Sin(angle);
-                
-                Coordinate newCoordinate = new Coordinate(newX, newY, z);
-                Points newPoints = new Points(newCoordinate, figurePoints[i].PointBrush)
-                {
-                    PointColor = savedPointColors[i]
-                };
-                NewPoints.Add(newPoints);
-            }
-
-            for (int i = 0; i < figureLines.Count; i++)
-            {
-                List<Coordinate> newCoordinates = new List<Coordinate>();
-                for (int j = 0; j < 2; j++)
-                {
-                    float x = figureLines[i].Vertices[j].X;
-                    float y = figureLines[i].Vertices[j].Y;
-                    float z = figureLines[i].Vertices[j].Z;
-                    
-                    float newX = x * (float)Math.Cos(angle) - y * (float)Math.Sin(angle);
-                    float newY = y * (float)Math.Cos(angle) + x * (float)Math.Sin(angle);
-
-                    Coordinate newCoordinate = new Coordinate(newX, newY, z);
-                    newCoordinates.Add(newCoordinate);
-                }
-
-                Lines newLines = new Lines(newCoordinates, figureLines[i].LinePen)
-                {
-                    LineColor = savedLineColors[i]
-                };
-                NewLines.Add(newLines);
-            }
-            
-            figurePoints.Clear();
-            figurePoints.AddRange(NewPoints);
-
-            figureLines.Clear();
-            figureLines.AddRange(NewLines);
-            
-            RestoreColors(figurePoints, figureLines);
-            
-            Redraw(figurePoints, figureLines, distance);
-        }
-
-        public void Redraw(List<Points> figurePoints, List<Lines> figureLines, float distance)
-        {
-            for (int i = 0; i < figureLines.Count; i++)
-            {
-                figureLines[i].Draw(PictureBox, distance);
-            }
-
-            for (int i = 0; i < figurePoints.Count; i++)
-            {
-                figurePoints[i].Draw(PictureBox, distance);
-            }
+            Draw(figureLines, figurePoints);
         }
 
         public void Zoom(List<Points> figurePoints, List<Lines> figureLines, float changeSize)
         {
-            float distance = 300;
-            Graphics graphics = Graphics.FromImage(PictureBox.Image);
-            graphics.TranslateTransform(PictureBox.Width / 2, PictureBox.Height / 2);
+            Graphics graphics = Graphics.FromImage(_pictureBox.Image);
+            graphics.TranslateTransform((float)_pictureBox.Width / 2, (float)_pictureBox.Height / 2);
             
             SaveColors(figurePoints, figureLines);
             
-            NewPoints.Clear();
-            NewLines.Clear();
+            _newPoints.Clear();
+            _newLines.Clear();
             
             for (int i = 0; i < figurePoints.Count; i++)
             {
@@ -242,9 +126,9 @@ namespace WindowsFormsApp1.Classes
                 Coordinate newCoordinate = new Coordinate(newX, newY, newZ);
                 Points newPoints = new Points(newCoordinate, figurePoints[i].PointBrush)
                 {
-                    PointColor = savedPointColors[i]
+                    PointColor = _savedPointColors[i]
                 };
-                NewPoints.Add(newPoints);
+                _newPoints.Add(newPoints);
             }
 
             for (int i = 0; i < figureLines.Count; i++)
@@ -266,35 +150,34 @@ namespace WindowsFormsApp1.Classes
 
                 Lines newLines = new Lines(newCoordinates, figureLines[i].LinePen)
                 {
-                    LineColor = savedLineColors[i]
+                    LineColor = _savedLineColors[i]
                 };
-                NewLines.Add(newLines);
+                _newLines.Add(newLines);
             }
             
             figurePoints.Clear();
-            figurePoints.AddRange(NewPoints);
+            figurePoints.AddRange(_newPoints);
 
             figureLines.Clear();
-            figureLines.AddRange(NewLines);
+            figureLines.AddRange(_newLines);
             
             RestoreColors(figurePoints, figureLines);
-            
-            Redraw(figurePoints, figureLines, distance);
+            Draw(figureLines, figurePoints);
         }
         
         private void SaveColors(List<Points> figurePoints, List<Lines> figureLines)
         {
-            savedPointColors.Clear();
-            savedLineColors.Clear();
+            _savedPointColors.Clear();
+            _savedLineColors.Clear();
 
             foreach (var point in figurePoints)
             {
-                savedPointColors.Add(point.PointColor);
+                _savedPointColors.Add(point.PointColor);
             }
 
             foreach (var line in figureLines)
             {
-                savedLineColors.Add(line.LineColor);
+                _savedLineColors.Add(line.LineColor);
             }
         }
 
@@ -302,12 +185,12 @@ namespace WindowsFormsApp1.Classes
         {
             for (int i = 0; i < figurePoints.Count; i++)
             {
-                figurePoints[i].PointColor = savedPointColors[i];
+                figurePoints[i].PointColor = _savedPointColors[i];
             }
 
             for (int i = 0; i < figureLines.Count; i++)
             {
-                figureLines[i].LineColor = savedLineColors[i];
+                figureLines[i].LineColor = _savedLineColors[i];
             }
         }
     }

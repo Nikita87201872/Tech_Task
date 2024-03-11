@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
 
 namespace WindowsFormsApp1.Classes
 {
@@ -15,19 +14,6 @@ namespace WindowsFormsApp1.Classes
         {
             Vertices = vertices;
             LinePen = linePen;
-        }
-
-        public void Draw(PictureBox pictureBox, float distance)
-        {
-            Graphics graphics = Graphics.FromImage(pictureBox.Image);
-            graphics.TranslateTransform(pictureBox.Width / 2, pictureBox.Height / 2);
-
-            using (Pen pen = new Pen(LineColor))
-            {
-                graphics.DrawLine(pen, Vertices[0].Project(distance), Vertices[1].Project(distance));
-            }
-            
-            graphics.Dispose();
         }
     }
 }

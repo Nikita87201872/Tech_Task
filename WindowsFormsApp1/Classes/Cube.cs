@@ -5,28 +5,24 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1.Classes
 {
-    public class Cube : IDraw
+    public class Cube : AbstractDrawer
     {
-        public List<Lines> CubeLines = new List<Lines>();
-        public List<Points> CubePoints = new List<Points>();
-        private PictureBox PictureBox;
-
-        public Cube(PictureBox pictureBox)
+        public List<Coordinate> Coordinates;
+        public Cube(PictureBox pictureBox) : base(pictureBox)
         {
             PictureBox = pictureBox;
-            CubeLines = new List<Lines>();
-            CubePoints = new List<Points>();
-
-            InitializeCubeData();
+            Lines = new List<Lines>();
+            Points = new List<Points>();
+            InitializeData();
         }
 
-        private void InitializeCubeData()
+        protected sealed override void InitializeData()
         {
-            int x = PictureBox.Height / 5;
-            int y = PictureBox.Height / 5;
-            int z = PictureBox.Height / 5;
+            float x = (float)PictureBox.Height / 5;
+            float z = (float)PictureBox.Height / 5;
+            float y = (float)PictureBox.Height / 5;
 
-            List<Coordinate> cubeCoordinates = new List<Coordinate>()
+            List<Coordinate> cubePoints = new List<Coordinate>()
             {
                 new Coordinate(-x, y, z),
                 new Coordinate(-x, -y, z),
@@ -56,34 +52,16 @@ namespace WindowsFormsApp1.Classes
 
             for (int i = 0; i < cubeLineIndices.Count; i++)
             {
-                List<Coordinate> lineVertices = cubeLineIndices[i].Select(index => cubeCoordinates[index]).ToList();
+                List<Coordinate> lineVertices = cubeLineIndices[i].Select(index => cubePoints[index]).ToList();
                 Lines cubeLine = new Lines(lineVertices, Pens.Black);
-                CubeLines.Add(cubeLine);
+                Lines.Add(cubeLine);
             }
 
-            for (int i = 0; i < cubeCoordinates.Count; i++)
+            for (int i = 0; i < cubePoints.Count; i++)
             {
-                Points cubePoint = new Points(cubeCoordinates[i], Brushes.Black);
-                CubePoints.Add(cubePoint);
+                Points cubePoint = new Points(cubePoints[i], Brushes.Black);
+                Points.Add(cubePoint);
             }
-        }
-
-        public void Draw()
-        {
-            Graphics graphics = PictureBox.CreateGraphics();
-            float distance = 300;
-
-            foreach (Lines cubeLine in CubeLines)
-            {
-                cubeLine.Draw(PictureBox, distance);
-            }
-
-            foreach (Points cubePoint in CubePoints)
-            {
-                cubePoint.Draw(PictureBox, distance);
-            }
-
-            graphics.Dispose();
         }
     }
 }

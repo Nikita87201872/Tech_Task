@@ -8,7 +8,7 @@
         <OutputType>WinExe</OutputType>
         <RootNamespace>WindowsFormsApp1</RootNamespace>
         <AssemblyName>WindowsFormsApp1</AssemblyName>
-        <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+        <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <Deterministic>true</Deterministic>
@@ -46,6 +46,7 @@
         <Reference Include="System.Xml"/>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Classes\AbstractDrawer.cs" />
         <Compile Include="Classes\ChangeFigure.cs" />
         <Compile Include="Classes\Coordinate.cs" />
         <Compile Include="Classes\Cube.cs" />
@@ -59,8 +60,6 @@
         <Compile Include="Form1.Designer.cs">
             <DependentUpon>Form1.cs</DependentUpon>
         </Compile>
-        <Compile Include="Interfaces\IDraw.cs" />
-        <Compile Include="Interfaces\IChangeFigure.cs" />
         <Compile Include="Program.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <EmbeddedResource Include="Form1.resx">

@@ -5,45 +5,37 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1.Classes
 {
-    public class Parallelepiped : IDraw
+    public class Parallelepiped : AbstractDrawer
     {
-        public List<Lines> ParallelepipedLines = new List<Lines>();
-        public List<Points> ParallelepipedPoints = new List<Points>();
-        private PictureBox PictureBox;
 
-        public Parallelepiped(PictureBox pictureBox)
+        public Parallelepiped(PictureBox pictureBox) : base(pictureBox)
         {
             PictureBox = pictureBox;
-            ParallelepipedLines = new List<Lines>();
-            ParallelepipedPoints = new List<Points>();
-            
-            InitializeParallelepipedData();
+            Lines = new List<Lines>();
+            Points = new List<Points>();
+            InitializeData();
         }
 
-        private void InitializeParallelepipedData()
+        protected sealed override void InitializeData()
         {
-            float distance = 300;
-
-            Pen pen = new Pen(Color.Black);
-            
-            int x = PictureBox.Height / 5;
-            int y = PictureBox.Height / 7 * 2;
-            int z = PictureBox.Height / 5;
+            float x = (float)PictureBox.Height / 5;
+            float y = (float)PictureBox.Height / 5;
+            float z = (float)PictureBox.Height / 5;
             
 
-            List<Coordinate> ParallelepipedPoint = new List<Coordinate>()
+            List<Coordinate> parallelepipedPoint = new List<Coordinate>()
             {
-                new Coordinate(-x, y, z),
-                new Coordinate(-x, -y, z),
-                new Coordinate(x, -y, z),
-                new Coordinate(x, y, z),
-                new Coordinate(-x, y, -z),
-                new Coordinate(-x, -y, -z),
-                new Coordinate(x, -y, -z),
-                new Coordinate(x, y, -z)
+                new Coordinate(-x, 1.5f*y, z),
+                new Coordinate(-x, -1.5f*y, z),
+                new Coordinate(x, -1.5f*y, z),
+                new Coordinate(x, 1.5f*y, z),
+                new Coordinate(-x, 1.5f*y, -z),
+                new Coordinate(-x, -1.5f*y, -z),
+                new Coordinate(x, -1.5f*y, -z),
+                new Coordinate(x, 1.5f*y, -z)
             };
 
-            List<List<int>> ParallelepipedLineIndices = new List<List<int>>()
+            List<List<int>> parallelepipedLineIndices = new List<List<int>>()
             {
                 new List<int> {0, 1},
                 new List<int> {1, 2},
@@ -61,36 +53,18 @@ namespace WindowsFormsApp1.Classes
                 new List<int> {3, 7}
             };
             
-            for (int i = 0; i < ParallelepipedLineIndices.Count; i++)
+            for (int i = 0; i < parallelepipedLineIndices.Count; i++)
             {
-                List<Coordinate> lineVertices = ParallelepipedLineIndices[i].Select(index => ParallelepipedPoint[index]).ToList();
+                List<Coordinate> lineVertices = parallelepipedLineIndices[i].Select(index => parallelepipedPoint[index]).ToList();
                 Lines parallelepipedLines = new Lines(lineVertices, Pens.Black);
-                ParallelepipedLines.Add(parallelepipedLines);
+                Lines.Add(parallelepipedLines);
             }
 
-            for (int i = 0; i < ParallelepipedPoint.Count; i++)
+            for (int i = 0; i < parallelepipedPoint.Count; i++)
             {
-                Points points = new Points(ParallelepipedPoint[i], Brushes.Black);
-                ParallelepipedPoints.Add(points);
+                Points points = new Points(parallelepipedPoint[i], Brushes.Black);
+                Points.Add(points);
             }
-        }
-        
-        public void Draw()
-        {
-            Graphics graphics = PictureBox.CreateGraphics();
-            float distance = 300;
-
-            foreach (Lines pyramidLine in ParallelepipedLines)
-            {
-                pyramidLine.Draw(PictureBox, distance);
-            }
-
-            foreach (Points pyramidPoint in ParallelepipedPoints)
-            {
-                pyramidPoint.Draw(PictureBox, distance);
-            }
-
-            graphics.Dispose();
         }
     }
 }

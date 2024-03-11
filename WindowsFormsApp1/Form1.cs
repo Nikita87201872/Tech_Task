@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.Classes;
-using WindowsFormsApp1.Interfaces;
+using Exception = System.Exception;
+using Timer = System.Windows.Forms.Timer;
 
 namespace WindowsFormsApp1
 {
@@ -21,11 +16,11 @@ namespace WindowsFormsApp1
             InitializeComponent();
             InitializeDataGridView();
 
-            this.Resize += Form1_Resize;
+            Resize += Form1_Resize;
 
-            this.MouseWheel += new MouseEventHandler(Form1_MouseWheel);
+            MouseWheel += Form1_MouseWheel;
             
-            textBoxRotationAngle.Text = "10";
+            textBoxRotationAngle.Text = @"10";
             
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             
@@ -35,34 +30,55 @@ namespace WindowsFormsApp1
             
             pictureBox1.BackColor = Color.White;
 
-            ChangeFigure = new ChangeFigure(pictureBox1);
+            _changeFigure = new ChangeFigure(pictureBox1);
+            timer1 = new Timer();
+            timer1.Interval = 30;
+            timer1.Tick += timer1_Tick;
+
+            label2.Text = @"Speed: " + trackBar1.Value.ToString();
+            
+            _checkBoxActions = new Dictionary<CheckBox, Action>
+            {
+                { checkBox1, () => Rotate(_rotationAngle, 0, 0) },
+                { checkBox2, () => Rotate(0, _rotationAngle, 0) },
+                { checkBox3, () => Rotate(0, 0, _rotationAngle) }
+            };
+            _rotationAngle = trackBar1.Value * 0.0015f;
+
+            _height = pictureBox1.Height;
         }
-        
-        public List<Points> FigurePoints;
-        public List<Lines> FigureLines;
-        public Cube Cube;
-        public Pyramid Pyramid;
-        public Parallelepiped Parallelepiped;
-        private bool _figureOnPictureBox = false;
-        public ChangeFigure ChangeFigure;
-        private bool isMouseDown = false;
-        private Point lastMousePos;
-        public float distance = 300;
-        
-        
+
+        private List<Points> _figurePoints;
+        private List<Lines> _figureLines;
+        private Cube _cube;
+        private Pyramid _pyramid;
+        private Parallelepiped _parallelepiped;
+        private bool _figureOnPictureBox;
+        private readonly ChangeFigure _changeFigure;
+        private bool _isMouseDown;
+        private Point _lastMousePos;
+        private float _rotationAngle;
+        private readonly Dictionary<CheckBox, Action> _checkBoxActions;
+
+        private float _height;
+
+
         private void Form1_Resize(object sender, EventArgs e)
         {
             try
             {
-                if (pictureBox1.Width > 0 && pictureBox1.Height > 0)
+                if (pictureBox1.Width > 0 && pictureBox1.Height > 0 && _figureOnPictureBox)
                 {
+                    float delta = pictureBox1.Height / _height;
+                    _height = pictureBox1.Height;
+                    
                     pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-                    ChangeFigure.Redraw(FigurePoints, FigureLines, distance);
+                    _changeFigure.Zoom(_figurePoints, _figureLines, delta);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                HandlingError(ex);
+                HandlingError();
             }
         }
         
@@ -97,21 +113,20 @@ namespace WindowsFormsApp1
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.MultiSelect = false;
+            dataGridView1.ReadOnly = true;
         }
 
-        public void UpdateComboBoxes()
+        private void UpdateColorButton()
         {
-            comboBox2.Items.Clear();
-            comboBox3.Items.Clear();
-            
-            for (int i = 0; i < FigureLines.Count; i++)
+            if (_lastSelectedType == LastSelectedType.Line)
             {
-                comboBox2.Items.Add($"Line {i + 1}");
+                Color color1 = _figureLines[0].LinePen.Color;
+                ChangeColor.BackColor = color1;
             }
-
-            for (int i = 0; i < FigurePoints.Count; i++)
+            else
             {
-                comboBox3.Items.Add($"Point {i + 1}");
+                Color color2 = ((SolidBrush)_figurePoints[0].PointBrush).Color;
+                ChangeColor.BackColor = color2;
             }
         }
         
@@ -119,12 +134,12 @@ namespace WindowsFormsApp1
         {
             _figureOnPictureBox = true;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            Cube = new Cube(pictureBox1);
-            Cube.Draw();
-            FigurePoints = Cube.CubePoints;
-            FigureLines = Cube.CubeLines;
-            
+            _cube = new Cube(pictureBox1);
+            _figureLines = _cube.Lines;
+            _figurePoints = _cube.Points;
+            _cube.Draw(_figureLines, _figurePoints);
             UpdateDataGridView();
+            UpdateColorButton();
             UpdateComboBoxes();
         }
 
@@ -133,13 +148,13 @@ namespace WindowsFormsApp1
         {
             _figureOnPictureBox = true;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            Pyramid = new Pyramid(pictureBox1);
-            Pyramid.Draw();
-            FigurePoints = Pyramid.PyramidPoints;
-            FigureLines = Pyramid.PyramidLines;
-            
-            UpdateDataGridView();
-            UpdateComboBoxes();
+            _pyramid = new Pyramid(pictureBox1);
+            _figurePoints = _pyramid.Points;
+            _figureLines = _pyramid.Lines;
+           _pyramid.Draw(_figureLines, _figurePoints);
+           UpdateDataGridView();
+           UpdateColorButton();
+           UpdateComboBoxes();
         }
         
 
@@ -147,19 +162,23 @@ namespace WindowsFormsApp1
         {
             _figureOnPictureBox = true;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            Parallelepiped = new Parallelepiped(pictureBox1);
-            Parallelepiped.Draw();
-            FigurePoints = Parallelepiped.ParallelepipedPoints;
-            FigureLines = Parallelepiped.ParallelepipedLines;
-            
+            _parallelepiped = new Parallelepiped(pictureBox1);
+            _figurePoints = _parallelepiped.Points;
+            _figureLines = _parallelepiped.Lines;
+            _parallelepiped.Draw(_figureLines, _figurePoints);
             UpdateDataGridView();
+            UpdateColorButton();
             UpdateComboBoxes();
         }
 
-        public void X_Rotate(float angle)
+        private void Rotate(float angleX, float angleY, float angleZ)
         {
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            ChangeFigure.TransformX(FigurePoints, FigureLines, angle);
+            _changeFigure.Rotate(_figurePoints, _figureLines, angleX, 'X');
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            _changeFigure.Rotate(_figurePoints, _figureLines, angleY, 'Y');
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            _changeFigure.Rotate(_figurePoints, _figureLines, angleZ, 'Z');
         }
         
         private void X_Coordinate_Click(object sender, EventArgs e)
@@ -167,37 +186,25 @@ namespace WindowsFormsApp1
             try
             {
                 float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-                X_Rotate(angle);
+                Rotate(angle, 0, 0);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                HandlingError(exception);
+                HandlingError();
             }
-        }
-
-        public void Y_Rotate(float angle)
-        {
-            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            ChangeFigure.TransformY(FigurePoints, FigureLines, angle);
         }
 
         private void Y_Coordinate_Click(object sender, EventArgs e)
         {
             try
             {
-                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-                Y_Rotate(angle);
+                float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180; 
+                Rotate(0, angle, 0);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                HandlingError(exception);
+                HandlingError();
             }
-        }
-
-        public void Z_Rotate(float angle)
-        {
-            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            ChangeFigure.TransformZ(FigurePoints, FigureLines, angle);
         }
 
         private void Z_Coordinate_Click(object sender, EventArgs e)
@@ -205,47 +212,51 @@ namespace WindowsFormsApp1
             try
             {
                 float angle = float.Parse(textBoxRotationAngle.Text) * (float)Math.PI / 180;
-                Z_Rotate(angle);
+                Rotate(0, 0,angle);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                HandlingError(exception);
+                HandlingError();
             }
         }
 
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
-            isMouseDown = true;
-            lastMousePos = e.Location;
+            _isMouseDown = true;
+            _lastMousePos = e.Location;
         }
 
         private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
-            isMouseDown = false;
+            _isMouseDown = false;
+            UpdateDataGridView();
         }
-
+        
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
             try
             {
-                if (isMouseDown)
+                if (_isMouseDown)
                 {
-                    int deltaX = e.X - lastMousePos.X;
-                    int deltaY = e.Y - lastMousePos.Y;
+                    int deltaX = e.X - _lastMousePos.X;
+                    int deltaY = e.Y - _lastMousePos.Y;
 
                     float angleX = deltaX * 0.01f;
                     float angleY = deltaY * 0.01f;
-                    pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-                    ChangeFigure.TransformX(FigurePoints, FigureLines, -angleY);
-                    pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-                    ChangeFigure.TransformY(FigurePoints, FigureLines, angleX);
-
-                    lastMousePos = e.Location;
+                    
+                    Rotate(-angleY, angleX, 0);
+                    // Thread thread1 = new Thread(() => Rotate(angleX, -angleY, 0));
+                    // Thread thread2 = new Thread(() => UpdateDataGridView());
+                    //
+                    // thread1.Start();
+                    // thread2.Start();
+                    
+                    _lastMousePos = e.Location;
                 }
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                HandlingError(exception);
+                HandlingError();
             }
         }
 
@@ -259,85 +270,82 @@ namespace WindowsFormsApp1
                     switch (e.KeyCode)
                     {
                         case Keys.W:
-                            X_Rotate(angle);
+                            Rotate(angle, 0, 0);
                             break;
                         case Keys.S:
-                            X_Rotate(-angle);
+                            Rotate(-angle, 0, 0);
                             break;
                         case Keys.D:
-                            Y_Rotate(angle);
+                            Rotate(0, angle, 0);
                             break;
                         case Keys.A:
-                            Y_Rotate(-angle);
+                            Rotate(0, -angle, 0);
                             break;
                     }
                 }
-                catch (Exception exception)
+                catch (Exception)
                 {
-                    HandlingError(exception);
+                    HandlingError();
                 }
             }
         }
         
-        private void HandlingError(Exception exception)
+        private void HandlingError()
         {
-            isMouseDown = false;
+            _isMouseDown = false;
             try
             {
-                float value = float.Parse(textBoxRotationAngle.Text);
+                var unused = float.Parse(textBoxRotationAngle.Text);
                 if(!_figureOnPictureBox)
                 {
-                    MessageBox.Show(@"Вы не вызвали фигуру!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(@"You didn't summon the figure!", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                if (textBoxRotationAngle.Text == "")
-                {
-                    MessageBox.Show(@"Введите угол поворота!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
-                {
-                    MessageBox.Show("Введён неверный формат числа!(Пример: 1,01)", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                MessageBox.Show(textBoxRotationAngle.Text == "" ? @"Enter the rotation angle!" : @"The wrong number format has been entered!(Example: 1.01)", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         private void Form1_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (pictureBox1.Bounds.Contains(e.Location) && _figureOnPictureBox)
-            {
-                int delta = e.Delta;
-                float changeSize = (delta > 0) ? 1.01f : 0.99f;
-                pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-                ChangeFigure.Zoom(FigurePoints, FigureLines, changeSize);
-            }
+            if (!pictureBox1.Bounds.Contains(e.Location) || !_figureOnPictureBox) return;
+            
+            var delta = e.Delta;
+            var changeSize = (delta > 0) ? 1.01f : 0.99f;
+            
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            _changeFigure.Zoom(_figurePoints, _figureLines, changeSize);
         }
         
         private void UpdateDataGridView()
         {
-            dataGridView1.Rows.Clear();
-
-            for (int i = 0; i < FigurePoints.Count; i++)
+            if (_figurePoints != null)
             {
-                dataGridView1.Rows.Add(Math.Round(FigurePoints[i].Coordinate.X, 1), Math.Round(FigurePoints[i].Coordinate.Y, 1), Math.Round(FigurePoints[i].Coordinate.Z, 1), $"Point {i + 1}");
+                Task.Run(() =>
+                {
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        dataGridView1.Rows.Clear();
+                        for (var i = 0; i < _figurePoints.Count; i++)
+                        {
+                            dataGridView1.Rows.Add(
+                                Math.Round(_figurePoints[i].Coordinate.X, 1), 
+                                Math.Round(_figurePoints[i].Coordinate.Y, 1), 
+                                Math.Round(_figurePoints[i].Coordinate.Z, 1), 
+                                $"Point {i + 1}");
+                        }
+                    });
+                });
+            }
+            else
+            {
+                HandlingError();
             }
         }
+      
+        private readonly ColorDialog _colorDialog = new ColorDialog();
 
-        private void UpdateDataGrid_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                UpdateDataGridView();
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show("Вы не вызвали фигуру!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private ColorDialog _colorDialog = new ColorDialog();
-        private Color _newColor;
-        enum LastSelectedType
+        public enum LastSelectedType
         {
             None,
             Point,
@@ -345,11 +353,13 @@ namespace WindowsFormsApp1
         }
 
         private LastSelectedType _lastSelectedType = LastSelectedType.None;
+        private Color _lastSelectedColorFL;
+        private Color _lastSelectedColorFP;
         private void ColorButton_Click(object sender, EventArgs e)
         {
             if (!_figureOnPictureBox)
             {
-                MessageBox.Show("Вы не вызвали фигуру!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(@"You didn't summon the figure!", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
@@ -363,39 +373,130 @@ namespace WindowsFormsApp1
                 {
                     ApplyColorForLine(_colorDialog.Color);
                 }
-
-                ChangeFigure.Redraw(FigurePoints, FigureLines, distance);
+                _changeFigure.Draw(_figureLines, _figurePoints);
             }
         }
-
+        
         private void ApplyColorForPoint(Color color)
         {
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            int count = comboBox3.SelectedIndex;
-            FigurePoints[count].PointColor = color;
-            FigurePoints[count].PointBrush = new SolidBrush(color);
+            int count = PointComboBox.SelectedIndex;
+            if (count != 0)
+            {
+                _figurePoints[count - 1].PointColor = color;
+                _figurePoints[count - 1].PointBrush = new SolidBrush(color);
+            }
+            else
+            {
+                foreach (Points point in _figurePoints)
+                {
+                    point.PointColor = color;
+                    point.PointBrush = new SolidBrush(color);
+                }
+
+                _lastSelectedColorFP = color;
+            }
         }
 
         private void ApplyColorForLine(Color color)
         {
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            int count = comboBox2.SelectedIndex;
-            FigureLines[count].LineColor = color;
-            FigureLines[count].LinePen = new Pen(color);
+            int count = LineComboBox.SelectedIndex;
+            if (count != 0)
+            {
+                _figureLines[count - 1].LineColor = color;
+                _figureLines[count - 1].LinePen = new Pen(color);
+            }
+            else
+            {
+                foreach (Lines line in _figureLines)
+                {
+                    line.LineColor = color;
+                    line.LinePen = new Pen(color);
+                }
+
+                _lastSelectedColorFL = color;
+            }
         }
 
-        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        public void UpdateComboBoxes()
+        {
+            LineComboBox.Items.Clear();
+            PointComboBox.Items.Clear();
+            LineComboBox.Items.Add("Lines");
+            PointComboBox.Items.Add("Points");
+            for (int i = 0; i < _figureLines.Count; i++)
+            {
+                LineComboBox.Items.Add($"Line {i + 1}");
+            }
+
+            for (int i = 0; i < _figurePoints.Count; i++)
+            {
+                PointComboBox.Items.Add($"Point {i + 1}");
+            }
+        }
+        private void LineComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             _lastSelectedType = LastSelectedType.Line;
-            Color color = FigureLines[comboBox2.SelectedIndex].LinePen.Color;
-            ChangeColor.BackColor = color;
+            if (LineComboBox.SelectedIndex > 0 && LineComboBox.SelectedIndex <= _figureLines.Count)
+            {
+                Color color = _figureLines[LineComboBox.SelectedIndex - 1].LinePen.Color;
+                ChangeColor.BackColor = color;
+            }
+            else
+            {
+                ChangeColor.BackColor = _lastSelectedColorFL;
+            }
         }
-
-        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
+        
+        private void PointComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             _lastSelectedType = LastSelectedType.Point;
-            Color color = ((SolidBrush)FigurePoints[comboBox3.SelectedIndex].PointBrush).Color;
-            ChangeColor.BackColor = color;
+            if (PointComboBox.SelectedIndex > 0 && PointComboBox.SelectedIndex <= _figurePoints.Count)
+            {
+                Color color = ((SolidBrush)_figurePoints[PointComboBox.SelectedIndex - 1].PointBrush).Color;
+                ChangeColor.BackColor = color;
+            }
+            else
+            {
+                ChangeColor.BackColor = _lastSelectedColorFP;
+            }
+        }
+
+        private void RotateButton_Click(object sender, EventArgs e)
+        {
+            if (_figureOnPictureBox)
+            {
+                if (timer1.Enabled)
+                    timer1.Stop();
+                else
+                    timer1.Start();
+            }
+            else
+            {
+                HandlingError();
+            }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            this.Invoke((MethodInvoker)delegate
+            {
+                foreach (var checkBoxAction in _checkBoxActions)
+                {
+                    var checkBox = checkBoxAction.Key;
+                    if (checkBox.Checked)
+                    {
+                        checkBoxAction.Value.Invoke();
+                    }
+                }
+            });
+        }
+        
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            _rotationAngle = trackBar1.Value * 0.0015f;
+            label2.Text = @"Speed: " + trackBar1.Value.ToString();
         }
   }
 }
