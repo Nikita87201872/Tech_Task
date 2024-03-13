@@ -24,22 +24,21 @@ namespace WindowsFormsApp1.Classes
         public void Draw(List<Lines> figureLines, List<Points> figurePoints)
         {
             float distance = 300;
-            using (var graphics = Graphics.FromImage(PictureBox.Image))
+            using (Graphics graphics = Graphics.FromImage(PictureBox.Image))
             {
                 graphics.TranslateTransform((float)PictureBox.Width / 2, (float)PictureBox.Height / 2);
-
-                for (int i = 0; i < figurePoints.Count; i++)
-                {
-                    using (Brush brush = new SolidBrush(figurePoints[i].PointColor))
-                    {
-                        graphics.FillEllipse(brush, figurePoints[i].Coordinate.Project(distance).X - 5, figurePoints[i].Coordinate.Project(distance).Y - 5, 10, 10);
-                    }
-                }
                 for (int i = 0; i < figureLines.Count; i++)
                 {
                     using (Pen pen = new Pen(figureLines[i].LineColor))
                     {
                         graphics.DrawLine(pen, figureLines[i].Vertices[0].Project(distance), figureLines[i].Vertices[1].Project(distance));
+                    }
+                }
+                for (int i = 0; i < figurePoints.Count; i++)
+                {
+                    using (Brush brush = new SolidBrush(figurePoints[i].PointColor))
+                    {
+                        graphics.FillEllipse(brush, figurePoints[i].Coordinate.Project(distance).X - 5, figurePoints[i].Coordinate.Project(distance).Y - 5, 10, 10);
                     }
                 }
             }

@@ -7,7 +7,6 @@ namespace WindowsFormsApp1.Classes
 {
     public class ChangeFigure : AbstractDrawer
     {
-        private readonly PictureBox _pictureBox;
         private readonly List<Points> _newPoints = new List<Points>();
         private readonly List<Lines> _newLines = new List<Lines>();
         private readonly List<Color> _savedPointColors = new List<Color>();
@@ -15,7 +14,7 @@ namespace WindowsFormsApp1.Classes
 
         public ChangeFigure(PictureBox pictureBox) : base(pictureBox)
         {
-            _pictureBox = pictureBox;
+            
         }
         public void Rotate(List<Points> figurePoints, List<Lines> figureLines, float angle, char axis)
         {
@@ -99,15 +98,10 @@ namespace WindowsFormsApp1.Classes
 
             figureLines.Clear();
             figureLines.AddRange(newLines);
-
-            Draw(figureLines, figurePoints);
         }
 
         public void Zoom(List<Points> figurePoints, List<Lines> figureLines, float changeSize)
         {
-            Graphics graphics = Graphics.FromImage(_pictureBox.Image);
-            graphics.TranslateTransform((float)_pictureBox.Width / 2, (float)_pictureBox.Height / 2);
-            
             SaveColors(figurePoints, figureLines);
             
             _newPoints.Clear();
@@ -162,7 +156,6 @@ namespace WindowsFormsApp1.Classes
             figureLines.AddRange(_newLines);
             
             RestoreColors(figurePoints, figureLines);
-            Draw(figureLines, figurePoints);
         }
         
         private void SaveColors(List<Points> figurePoints, List<Lines> figureLines)
